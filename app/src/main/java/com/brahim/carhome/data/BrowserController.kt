@@ -66,11 +66,12 @@ class BrowserController(private val context: Context) {
         }
         webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView, newProgress: Int) {
-                progress = newProgress
+                // "this@BrowserController" : sinon Kotlin vise WebView.progress (lecture seule)
+                this@BrowserController.progress = newProgress
             }
 
             override fun onReceivedTitle(view: WebView, t: String?) {
-                title = t.orEmpty()
+                this@BrowserController.title = t.orEmpty()
             }
         }
     }
