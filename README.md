@@ -12,6 +12,15 @@ Il affiche de grosses tuiles façon CarPlay, un navigateur web et tes applis ép
 - **Réglages** : nom, couleur et photo de la voiture, seuil de vitesse, version ordinateur des sites, moteur de recherche, bouton pour définir CarHome comme écran d'accueil.
 - **Sécurité** : au-dessus du seuil (5 km/h par défaut), le navigateur est remplacé par l'écran « Disponible à l'arrêt » et les vidéos sont coupées. Sans position GPS récente (pas encore de signal, tunnel, GPS coupé), le navigateur reste bloqué par sécurité.
 
+## Version iPhone (web)
+
+Le dossier `web/` contient une version web installable sur iPhone : heure, météo, vitesse GPS,
+ta voiture, favoris et raccourcis Waze / Google Maps / Plans / Spotify.
+Elle est publiée automatiquement sur GitHub Pages :
+`https://brahimbissaragane-byte.github.io/CARHOME/`
+Dans Safari : Partager > « Sur l'écran d'accueil ». Elle s'affiche sur l'iPhone, pas dans CarPlay
+(Apple ne le permet pas).
+
 ## 1. Ouvrir le projet
 
 1. Installe [Android Studio](https://developer.android.com/studio) (gratuit).
