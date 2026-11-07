@@ -1,6 +1,16 @@
 package com.brahim.carhome.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import com.brahim.carhome.data.CarPhoto
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,25 +80,90 @@ fun HomeScreen(
     Column(Modifier.fillMaxSize().padding(24.dp)) {
         TopBar(speedKmh, gpsOk, weather)
         Spacer(Modifier.height(20.dp))
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 170.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item { Tile("Navigateur", onClick = { onOpen(Screen.BROWSER) }) { TileIcon(Icons.Rounded.Language, CarColors.Blue) } }
-            item { Tile("Favoris", onClick = { onOpen(Screen.FAVORITES) }) { TileIcon(Icons.Rounded.Star, CarColors.Amber) } }
-            item { Tile("Applications", onClick = { onOpen(Screen.APPS) }) { TileIcon(Icons.Rounded.Apps, CarColors.Green) } }
-            item { Tile("Réglages", onClick = { onOpen(Screen.SETTINGS) }) { TileIcon(Icons.Rounded.Settings, CarColors.Gray) } }
-            items(pinnedApps, key = { it.packageName }) { app ->
-                Tile(app.label, onClick = { onLaunchApp(app) }) { TileAppIcon(app.icon) }
+        Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            CarCard(
+                prefs = prefs,
+                speedKmh = speedKmh,
+                gpsOk = gpsOk,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
+            Column(Modifier.weight(1.25f)) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 150.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f, fill = false),
+                ) {
+                    item { Tile("Navigateur", onClick = { onOpen(Screen.BROWSER) }) { TileIcon(Icons.Rounded.Language, CarColors.Blue) } }
+                    item { Tile("Favoris", onClick = { onOpen(Screen.FAVORITES) }) { TileIcon(Icons.Rounded.Star, CarColors.Amber) } }
+                    item { Tile("Applications", onClick = { onOpen(Screen.APPS) }) { TileIcon(Icons.Rounded.Apps, CarColors.Green) } }
+                    item { Tile("Réglages", onClick = { onOpen(Screen.SETTINGS) }) { TileIcon(Icons.Rounded.Settings, CarColors.Gray) } }
+                    items(pinnedApps, key = { it.packageName }) { app ->
+                        Tile(app.label, onClick = { onLaunchApp(app) }) { TileAppIcon(app.icon) }
+                    }
+                }
+                if (pinnedApps.isEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "Astuce : dans Applications, appuie longtemps sur une appli (Waze, Spotify…) pour l'épingler ici.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
-        if (pinnedApps.isEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Astuce : dans Applications, appuie longtemps sur une appli (Waze, Spotify…) pour l'épingler ici.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+    }
+}
+
+/** Carte « ma voiture » : photo choisie, ou dessin de la 308 dans la teinte choisie. */
+@Composable
+private fun CarCard(prefs: Prefs, speedKmh: Float, gpsOk: Boolean, modifier: Modifier) {
+    val context = LocalContext.current
+    val photo by produceState<ImageBitmap?>(null, prefs.carPhotoVersion) {
+        value = if (prefs.carPhotoVersion == 0L) null else CarPhoto.load(context)
+    }
+    val moving = gpsOk && speedKmh > prefs.speedThreshold
+    val (statusColor, status) = when {
+        !gpsOk -> CarColors.Gray to "En attente du GPS"
+        moving -> CarColors.Amber to "En route · ${speedKmh.toInt()} km/h"
+        else -> CarColors.Green to "À l'arrêt"
+    }
+
+    Column(
+        modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(20.dp)
+    ) {
+        Text(
+            prefs.carName.ifBlank { "Ma voiture" },
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
+        Spacer(Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(10.dp).background(statusColor, CircleShape))
+            Spacer(Modifier.width(8.dp))
+            Text(status, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Box(
+            Modifier.weight(1f).fillMaxWidth().padding(top = 12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val img = photo
+            if (img != null) {
+                Image(
+                    bitmap = img,
+                    contentDescription = prefs.carName,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
+                )
+            } else {
+                Car308Drawing(
+                    paint = Color(prefs.carPaint.argb),
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }

@@ -5,11 +5,11 @@ Il affiche de grosses tuiles façon CarPlay, un navigateur web et tes applis ép
 
 ## Ce que fait l'appli
 
-- **Accueil** : heure, date, météo (Open-Meteo, gratuite et sans clé), vitesse GPS, tuiles Navigateur / Favoris / Applications / Réglages, plus tes applis épinglées.
+- **Accueil** : ta voiture (dessin de Peugeot 308 T9 dans ta couleur, ou ta propre photo), heure, date, météo (Open-Meteo, gratuite et sans clé), vitesse GPS, tuiles Navigateur / Favoris / Applications / Réglages, plus tes applis épinglées.
 - **Navigateur** : barre d'adresse (site ou recherche), précédent, suivant, actualiser, ajout aux favoris. La page reste ouverte quand tu reviens à l'accueil.
 - **Favoris** : Google, YouTube, Météo-France et Wikipédia au départ. Appui long pour en supprimer un.
 - **Applications** : toutes les applis de la box. Appui long pour en épingler une à l'accueil (Waze, Spotify…).
-- **Réglages** : seuil de vitesse, version ordinateur des sites, moteur de recherche, bouton pour définir CarHome comme écran d'accueil.
+- **Réglages** : nom, couleur et photo de la voiture, seuil de vitesse, version ordinateur des sites, moteur de recherche, bouton pour définir CarHome comme écran d'accueil.
 - **Sécurité** : au-dessus du seuil (5 km/h par défaut), le navigateur est remplacé par l'écran « Disponible à l'arrêt » et les vidéos sont coupées. Sans position GPS récente (pas encore de signal, tunnel, GPS coupé), le navigateur reste bloqué par sécurité.
 
 ## 1. Ouvrir le projet
@@ -52,9 +52,11 @@ app/src/main/java/com/brahim/carhome/
 │   ├── Apps.kt               liste et lancement des applis
 │   ├── SpeedMonitor.kt       vitesse GPS
 │   ├── Weather.kt            météo (Open-Meteo)
+│   ├── CarPhoto.kt           photo perso de la voiture
 │   └── BrowserController.kt  le WebView (navigateur)
 └── ui/
     ├── HomeScreen.kt         écran d'accueil
+    ├── CarDrawing.kt         dessin de la 308 (vectoriel)
     ├── BrowserScreen.kt      navigateur
     ├── FavoritesScreen.kt    favoris
     ├── AppsScreen.kt         toutes les applis

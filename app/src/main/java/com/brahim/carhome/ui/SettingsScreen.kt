@@ -2,6 +2,21 @@ package com.brahim.carhome.ui
 
 import android.content.Intent
 import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import com.brahim.carhome.data.CarPaint
+import com.brahim.carhome.data.CarPhoto
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +46,16 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingsScreen(prefs: Prefs, onBack: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) scope.launch {
+            if (CarPhoto.save(context, uri)) {
+                prefs.updateCarPhotoVersion(System.currentTimeMillis())
+            } else {
+                Toast.makeText(context, "Impossible de lire cette image", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     fun openSystem(action: String) {
         val intent = Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -47,6 +72,48 @@ fun SettingsScreen(prefs: Prefs, onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         ScreenHeader("Réglages", onBack)
+
+        Section("Ma voiture")
+        OutlinedTextField(
+            value = prefs.carName,
+            onValueChange = { prefs.updateCarName(it.take(30)) },
+            label = { Text("Nom affiché sur l'accueil") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Text("Couleur du dessin")
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            CarPaint.entries.forEach { paint ->
+                FilterChip(
+                    selected = prefs.carPaint == paint,
+                    onClick = { prefs.updateCarPaint(paint) },
+                    label = { Text(paint.label) },
+                    leadingIcon = {
+                        Box(Modifier.size(18.dp).background(Color(paint.argb), CircleShape))
+                    },
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(
+                onClick = {
+                    pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+                modifier = Modifier.height(56.dp),
+            ) { Text(if (prefs.carPhotoVersion != 0L) "Changer la photo" else "Mettre une photo de ma voiture") }
+            if (prefs.carPhotoVersion != 0L) {
+                OutlinedButton(
+                    onClick = {
+                        CarPhoto.delete(context)
+                        prefs.updateCarPhotoVersion(0L)
+                    },
+                    modifier = Modifier.height(56.dp),
+                ) { Text("Revenir au dessin") }
+            }
+        }
 
         Section("Blocage du navigateur en roulant")
         Text("Le navigateur se bloque au-dessus de ${prefs.speedThreshold} km/h (mesuré par le GPS).")

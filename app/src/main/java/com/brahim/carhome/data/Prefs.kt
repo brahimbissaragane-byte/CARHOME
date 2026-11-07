@@ -17,6 +17,16 @@ enum class SearchEngine(val label: String, val homeUrl: String, val queryUrl: St
     BING("Bing", "https://www.bing.com", "https://www.bing.com/search?q="),
 }
 
+/** Teintes de carrosserie proposées pour le dessin de la voiture (ARGB). */
+enum class CarPaint(val label: String, val argb: Long) {
+    BLANC("Blanc nacré", 0xFFF2F2EE),
+    GRIS_CLAIR("Gris Platinium", 0xFF9AA3AD),
+    GRIS_FONCE("Gris Artense", 0xFF5F656C),
+    NOIR("Noir Perla Nera", 0xFF16181B),
+    ROUGE("Rouge Ultimate", 0xFFB3121D),
+    BLEU("Bleu Magnetic", 0xFF1F4E9C),
+}
+
 /** Réglages et favoris, sauvegardés sur la box et observables par Compose. */
 class Prefs(context: Context) {
 
@@ -35,6 +45,33 @@ class Prefs(context: Context) {
             .getOrDefault(SearchEngine.GOOGLE)
     )
         private set
+
+    var carName by mutableStateOf(sp.getString(KEY_CAR_NAME, null) ?: "Peugeot 308")
+        private set
+    var carPaint by mutableStateOf(
+        runCatching { CarPaint.valueOf(sp.getString(KEY_CAR_PAINT, null)!!) }
+            .getOrDefault(CarPaint.GRIS_CLAIR)
+    )
+        private set
+
+    /** Change à chaque nouvelle photo pour forcer son rechargement (0 = pas de photo). */
+    var carPhotoVersion by mutableStateOf(sp.getLong(KEY_CAR_PHOTO, 0L))
+        private set
+
+    fun updateCarName(name: String) {
+        carName = name
+        sp.edit().putString(KEY_CAR_NAME, name).apply()
+    }
+
+    fun updateCarPaint(paint: CarPaint) {
+        carPaint = paint
+        sp.edit().putString(KEY_CAR_PAINT, paint.name).apply()
+    }
+
+    fun updateCarPhotoVersion(version: Long) {
+        carPhotoVersion = version
+        sp.edit().putLong(KEY_CAR_PHOTO, version).apply()
+    }
 
     fun isFavorite(url: String) = favorites.any { it.url == url }
 
@@ -102,6 +139,9 @@ class Prefs(context: Context) {
         private const val KEY_SPEED = "speed"
         private const val KEY_DESKTOP = "desktop"
         private const val KEY_ENGINE = "engine"
+        private const val KEY_CAR_NAME = "car_name"
+        private const val KEY_CAR_PAINT = "car_paint"
+        private const val KEY_CAR_PHOTO = "car_photo"
 
         val DEFAULT_FAVORITES = listOf(
             Favorite("Google", "https://www.google.com"),
