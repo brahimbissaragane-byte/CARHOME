@@ -171,7 +171,8 @@ private fun CarCard(prefs: Prefs, speedKmh: Float, gpsOk: Boolean, modifier: Mod
                 Image(
                     bitmap = img,
                     contentDescription = prefs.carName,
-                    contentScale = ContentScale.Crop,
+                    // Fit : on voit toute la voiture, même si l'image n'a pas le format de la carte
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
                 )
             } else {
