@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -47,11 +48,7 @@ class BrowserController(private val context: Context) {
                 val scheme = request.url.scheme ?: return false
                 if (scheme == "http" || scheme == "https") return false
                 // Liens spéciaux (intent://, tel:, waze://…) : on les ouvre dans l'appli concernée
-                runCatching {
-                    context.startActivity(
-                        Intent(Intent.ACTION_VIEW, request.url).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                }
+                openExternal(view, request.url.toString(), scheme)
                 return true
             }
 
@@ -75,6 +72,31 @@ class BrowserController(private val context: Context) {
             override fun onReceivedTitle(view: WebView, t: String?) {
                 title = t.orEmpty()
             }
+        }
+    }
+
+    private fun openExternal(view: WebView, url: String, scheme: String) {
+        if (scheme == "intent") {
+            // Format "intent://…#Intent;…;end" : il faut le décoder, sinon rien ne s'ouvre.
+            val intent = runCatching { Intent.parseUri(url, Intent.URI_INTENT_SCHEME) }.getOrNull() ?: return
+            // Une page web ne doit pas pouvoir viser un composant précis d'une appli.
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+            intent.component = null
+            intent.selector = null
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val opened = runCatching { context.startActivity(intent) }.isSuccess
+            if (!opened) {
+                // Appli absente : on ouvre la page de secours prévue par le site, s'il y en a une
+                intent.getStringExtra("browser_fallback_url")
+                    ?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+                    ?.let { view.loadUrl(it) }
+            }
+            return
+        }
+        runCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
         }
     }
 

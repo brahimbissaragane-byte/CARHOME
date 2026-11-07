@@ -1,5 +1,6 @@
 package com.brahim.carhome
 
+import android.os.SystemClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,8 @@ import com.brahim.carhome.data.AppEntry
 import com.brahim.carhome.data.BrowserController
 import com.brahim.carhome.data.Prefs
 import com.brahim.carhome.data.SpeedMonitor
+import com.brahim.carhome.data.Weather
+import com.brahim.carhome.data.fetchWeather
 import com.brahim.carhome.data.launchApp
 import com.brahim.carhome.data.loadApps
 import com.brahim.carhome.ui.AppsScreen
@@ -61,6 +64,31 @@ fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor) {
     LaunchedEffect(prefs.desktopMode) { browser.setDesktopMode(prefs.desktopMode) }
     LaunchedEffect(browserLocked) { if (browserLocked) browser.pause() else browser.resume() }
 
+    // Météo : rafraîchie toutes les 30 min, ou si on a parcouru plus de 5 km.
+    var weather by remember { mutableStateOf<Weather?>(null) }
+    LaunchedEffect(Unit) {
+        var fetchedAt: android.location.Location? = null
+        var fetchedTime = 0L
+        while (true) {
+            val loc = speedMonitor.location.value
+            val previous = fetchedAt
+            val now = SystemClock.elapsedRealtime()
+            val due = previous == null ||
+                now - fetchedTime > WEATHER_REFRESH_MS ||
+                (loc != null && loc.distanceTo(previous) > WEATHER_DISTANCE_M)
+            if (loc != null && due) {
+                val result = fetchWeather(loc.latitude, loc.longitude)
+                if (result != null) {
+                    weather = result
+                    fetchedAt = loc
+                    fetchedTime = now
+                }
+            }
+            // En cas d'échec (pas de réseau), on réessaie à la prochaine vérification.
+            delay(if (weather == null) 15_000L else 60_000L)
+        }
+    }
+
     var apps by remember { mutableStateOf(emptyList<AppEntry>()) }
     LaunchedEffect(screen) {
         if (screen == Screen.HOME || screen == Screen.APPS) {
@@ -92,6 +120,7 @@ fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor) {
                 prefs = prefs,
                 speedKmh = speed,
                 gpsOk = gpsOk,
+                weather = weather,
                 pinnedApps = apps.filter { it.packageName in prefs.pinnedApps },
                 onOpen = { target ->
                     if (target == Screen.BROWSER) openBrowser() else screen = target
@@ -123,3 +152,6 @@ fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor) {
         }
     }
 }
+
+private const val WEATHER_REFRESH_MS = 30 * 60_000L
+private const val WEATHER_DISTANCE_M = 5_000f

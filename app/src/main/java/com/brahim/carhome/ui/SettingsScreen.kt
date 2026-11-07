@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.brahim.carhome.data.Prefs
 import com.brahim.carhome.data.SearchEngine
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(prefs: Prefs, onBack: () -> Unit) {
@@ -51,7 +52,11 @@ fun SettingsScreen(prefs: Prefs, onBack: () -> Unit) {
         Text("Le navigateur se bloque au-dessus de ${prefs.speedThreshold} km/h (mesuré par le GPS).")
         Slider(
             value = prefs.speedThreshold.toFloat(),
-            onValueChange = { prefs.updateSpeedThreshold(it.toInt()) },
+            onValueChange = {
+                // roundToInt : toInt() tronquerait 3,9999 en 3
+                val kmh = it.roundToInt()
+                if (kmh != prefs.speedThreshold) prefs.updateSpeedThreshold(kmh)
+            },
             valueRange = 3f..20f,
             steps = 16,
         )

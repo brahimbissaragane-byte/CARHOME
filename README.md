@@ -5,12 +5,12 @@ Il affiche de grosses tuiles façon CarPlay, un navigateur web et tes applis ép
 
 ## Ce que fait l'appli
 
-- **Accueil** : heure, date, vitesse GPS, tuiles Navigateur / Favoris / Applications / Réglages, plus tes applis épinglées.
+- **Accueil** : heure, date, météo (Open-Meteo, gratuite et sans clé), vitesse GPS, tuiles Navigateur / Favoris / Applications / Réglages, plus tes applis épinglées.
 - **Navigateur** : barre d'adresse (site ou recherche), précédent, suivant, actualiser, ajout aux favoris. La page reste ouverte quand tu reviens à l'accueil.
 - **Favoris** : Google, YouTube, Météo-France et Wikipédia au départ. Appui long pour en supprimer un.
 - **Applications** : toutes les applis de la box. Appui long pour en épingler une à l'accueil (Waze, Spotify…).
 - **Réglages** : seuil de vitesse, version ordinateur des sites, moteur de recherche, bouton pour définir CarHome comme écran d'accueil.
-- **Sécurité** : au-dessus du seuil (5 km/h par défaut), le navigateur est remplacé par l'écran « Disponible à l'arrêt » et les vidéos sont coupées. Sans GPS, le navigateur reste bloqué par sécurité.
+- **Sécurité** : au-dessus du seuil (5 km/h par défaut), le navigateur est remplacé par l'écran « Disponible à l'arrêt » et les vidéos sont coupées. Sans position GPS récente (pas encore de signal, tunnel, GPS coupé), le navigateur reste bloqué par sécurité.
 
 ## 1. Ouvrir le projet
 
@@ -51,6 +51,7 @@ app/src/main/java/com/brahim/carhome/
 │   ├── Prefs.kt              favoris, applis épinglées, réglages
 │   ├── Apps.kt               liste et lancement des applis
 │   ├── SpeedMonitor.kt       vitesse GPS
+│   ├── Weather.kt            météo (Open-Meteo)
 │   └── BrowserController.kt  le WebView (navigateur)
 └── ui/
     ├── HomeScreen.kt         écran d'accueil
@@ -64,7 +65,6 @@ app/src/main/java/com/brahim/carhome/
 
 ## Idées pour la v2
 
-- Météo sur l'accueil (API Open-Meteo, gratuite et sans clé)
 - Onglets et bloqueur de pubs
 - Fonds d'écran animés et thèmes
 - Commande vocale (« Ouvre Waze »)
