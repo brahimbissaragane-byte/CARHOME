@@ -1,0 +1,47 @@
+name: Compiler l'APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Vérifie aussi que gradle-wrapper.jar est bien l'officiel
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compiler
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Renommer l'APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk CarHome.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CarHome-apk
+          path: CarHome.apk
+
+      # Page de téléchargement direct : Releases > "CarHome (dernière version)"
+      - name: Publier l'APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-latest --yes --cleanup-tag || true
+          gh release create apk-latest CarHome.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "CarHome (dernière version)" \
+            --notes "APK compilé automatiquement depuis la branche ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7})."
