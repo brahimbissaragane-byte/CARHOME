@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import com.brahim.carhome.data.CarPaint
@@ -47,6 +48,10 @@ import kotlin.math.roundToInt
 fun SettingsScreen(prefs: Prefs, onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val version = remember {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+            .getOrNull() ?: ""
+    }
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scope.launch {
             if (CarPhoto.save(context, uri)) {
@@ -154,7 +159,7 @@ fun SettingsScreen(prefs: Prefs, onBack: () -> Unit) {
 
         Spacer(Modifier.height(12.dp))
         Text(
-            "CarHome 1.0 — le navigateur est réservé à l'arrêt.",
+            "CarHome $version — le navigateur est réservé à l'arrêt.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import com.brahim.carhome.data.CarPhoto
+import com.brahim.carhome.data.NowPlaying
+import com.brahim.carhome.data.NowPlayingMonitor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -73,6 +75,9 @@ fun HomeScreen(
     speedKmh: Float,
     gpsOk: Boolean,
     weather: Weather?,
+    music: NowPlaying?,
+    musicAccess: Boolean,
+    nowPlaying: NowPlayingMonitor,
     pinnedApps: List<AppEntry>,
     onOpen: (Screen) -> Unit,
     onLaunchApp: (AppEntry) -> Unit,
@@ -81,12 +86,23 @@ fun HomeScreen(
         TopBar(speedKmh, gpsOk, weather)
         Spacer(Modifier.height(20.dp))
         Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            CarCard(
-                prefs = prefs,
-                speedKmh = speedKmh,
-                gpsOk = gpsOk,
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
+            Column(
+                Modifier.weight(1f).fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                CarCard(
+                    prefs = prefs,
+                    speedKmh = speedKmh,
+                    gpsOk = gpsOk,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                )
+                MediaCard(
+                    music = music,
+                    hasAccess = musicAccess,
+                    monitor = nowPlaying,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             Column(Modifier.weight(1.25f)) {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 150.dp),

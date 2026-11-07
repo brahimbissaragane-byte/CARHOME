@@ -21,13 +21,29 @@ jobs:
       # Vérifie aussi que gradle-wrapper.jar est bien l'officiel
       - uses: gradle/actions/setup-gradle@v4
 
+      # Avec les secrets CARHOME_KEYSTORE_BASE64 et CARHOME_KEYSTORE_PASSWORD : version release signée avec la clé fixe.
+      # Sans : version debug (clé temporaire, les mises à jour demandent de désinstaller).
       - name: Compiler
+        env:
+          CARHOME_KEYSTORE_PASSWORD: ${{ secrets.CARHOME_KEYSTORE_PASSWORD }}
+          CARHOME_KEYSTORE_BASE64: ${{ secrets.CARHOME_KEYSTORE_BASE64 }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
-
-      - name: Renommer l'APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk CarHome.apk
+          if [ -n "$CARHOME_KEYSTORE_BASE64" ]; then
+            echo "$CARHOME_KEYSTORE_BASE64" | base64 -d > app/carhome-release.p12
+          else
+            unset CARHOME_KEYSTORE_PASSWORD
+          fi
+          if [ -n "$CARHOME_KEYSTORE_PASSWORD" ]; then
+            ./gradlew assembleRelease --stacktrace
+            cp app/build/outputs/apk/release/app-release.apk CarHome.apk
+            echo "BUILD_KIND=release signée" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Secrets de signature absents : compilation debug."
+            ./gradlew assembleDebug --stacktrace
+            cp app/build/outputs/apk/debug/app-debug.apk CarHome.apk
+            echo "BUILD_KIND=debug (clé temporaire)" >> "$GITHUB_ENV"
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
@@ -44,4 +60,4 @@ jobs:
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "CarHome (dernière version)" \
-            --notes "APK compilé automatiquement depuis la branche ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7})."
+            --notes "Version 1.${GITHUB_RUN_NUMBER}, ${BUILD_KIND}. Compilée depuis la branche ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7})."

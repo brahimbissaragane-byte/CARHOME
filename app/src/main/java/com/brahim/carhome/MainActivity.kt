@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.brahim.carhome.data.NowPlayingMonitor
 import com.brahim.carhome.data.Prefs
 import com.brahim.carhome.data.SpeedMonitor
 import com.brahim.carhome.ui.CarHomeTheme
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var prefs: Prefs
     private lateinit var speedMonitor: SpeedMonitor
+    private lateinit var nowPlaying: NowPlayingMonitor
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -26,6 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
         speedMonitor = SpeedMonitor(this)
+        nowPlaying = NowPlayingMonitor(this)
 
         // Plein écran + écran toujours allumé, comme un vrai écran de voiture
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -48,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             CarHomeTheme {
-                CarHomeApp(prefs = prefs, speedMonitor = speedMonitor)
+                CarHomeApp(prefs = prefs, speedMonitor = speedMonitor, nowPlaying = nowPlaying)
             }
         }
     }
@@ -56,10 +59,12 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         speedMonitor.start()
+        nowPlaying.start()
     }
 
     override fun onDestroy() {
         speedMonitor.stop()
+        nowPlaying.stop()
         super.onDestroy()
     }
 }

@@ -8,3 +8,8 @@
 /captures/
 .externalNativeBuild/
 .cxx/
+
+# Clé de signature : jamais dans le dépôt (fournie par les secrets GitHub)
+*.p12
+*.jks
+*.keystore

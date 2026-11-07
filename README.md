@@ -5,7 +5,7 @@ Il affiche de grosses tuiles façon CarPlay, un navigateur web et tes applis ép
 
 ## Ce que fait l'appli
 
-- **Accueil** : ta voiture (dessin de Peugeot 308 T9 dans ta couleur, ou ta propre photo), heure, date, météo (Open-Meteo, gratuite et sans clé), vitesse GPS, tuiles Navigateur / Favoris / Applications / Réglages, plus tes applis épinglées.
+- **Accueil** : musique en cours avec pochette et commandes (Spotify, Deezer, radio…), ta voiture (dessin de Peugeot 308 T9 dans ta couleur, ou ta propre photo), heure, date, météo (Open-Meteo, gratuite et sans clé), vitesse GPS, tuiles Navigateur / Favoris / Applications / Réglages, plus tes applis épinglées.
 - **Navigateur** : barre d'adresse (site ou recherche), précédent, suivant, actualiser, ajout aux favoris. La page reste ouverte quand tu reviens à l'accueil.
 - **Favoris** : Google, YouTube, Météo-France et Wikipédia au départ. Appui long pour en supprimer un.
 - **Applications** : toutes les applis de la box. Appui long pour en épingler une à l'accueil (Waze, Spotify…).
@@ -26,6 +26,17 @@ Il affiche de grosses tuiles façon CarPlay, un navigateur web et tes applis ép
 2. Lance l'émulateur, puis le bouton ▶ **Run 'app'**.
 3. Accepte la demande de localisation.
 4. Pour simuler la voiture qui roule : dans l'émulateur, **⋯ > Location > Routes**, crée un trajet et clique sur *Play route*. Le navigateur doit se bloquer.
+
+## Compilation automatique (sans ordinateur)
+
+À chaque mise à jour du code, GitHub compile l'appli et la publie ici :
+`https://github.com/brahimbissaragane-byte/CARHOME/releases/download/apk-latest/CarHome.apk`
+
+Pour que les mises à jour s'installent par-dessus l'ancienne version, les versions sont signées
+avec une clé fixe, fournie par deux secrets GitHub (Settings > Secrets and variables > Actions) :
+`CARHOME_KEYSTORE_BASE64` (la clé) et `CARHOME_KEYSTORE_PASSWORD` (son mot de passe).
+Sans eux, GitHub produit une version debug dont les mises à jour demandent de désinstaller l'appli.
+La clé ne doit jamais être mise dans le dépôt.
 
 ## 3. Créer l'APK
 
@@ -53,10 +64,12 @@ app/src/main/java/com/brahim/carhome/
 │   ├── SpeedMonitor.kt       vitesse GPS
 │   ├── Weather.kt            météo (Open-Meteo)
 │   ├── CarPhoto.kt           photo perso de la voiture
+│   ├── NowPlaying.kt         musique en cours (sessions média)
 │   └── BrowserController.kt  le WebView (navigateur)
 └── ui/
     ├── HomeScreen.kt         écran d'accueil
     ├── CarDrawing.kt         dessin de la 308 (vectoriel)
+    ├── MediaCard.kt          carte musique de l'accueil
     ├── BrowserScreen.kt      navigateur
     ├── FavoritesScreen.kt    favoris
     ├── AppsScreen.kt         toutes les applis

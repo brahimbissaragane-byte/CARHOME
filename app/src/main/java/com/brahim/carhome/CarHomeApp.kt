@@ -1,6 +1,12 @@
 package com.brahim.carhome
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.SystemClock
+import androidx.core.content.ContextCompat
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.brahim.carhome.data.AppEntry
 import com.brahim.carhome.data.BrowserController
+import com.brahim.carhome.data.NowPlayingMonitor
 import com.brahim.carhome.data.Prefs
 import com.brahim.carhome.data.SpeedMonitor
 import com.brahim.carhome.data.Weather
@@ -39,7 +46,7 @@ import kotlinx.coroutines.withContext
 enum class Screen { HOME, BROWSER, FAVORITES, APPS, SETTINGS }
 
 @Composable
-fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor) {
+fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor, nowPlaying: NowPlayingMonitor) {
     val context = LocalContext.current
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
 
@@ -89,12 +96,31 @@ fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor) {
         }
     }
 
+    // Liste des applis : chargée une fois, puis rechargée seulement quand une appli
+    // est installée, mise à jour ou supprimée (avant : à chaque retour à l'accueil).
     var apps by remember { mutableStateOf(emptyList<AppEntry>()) }
-    LaunchedEffect(screen) {
-        if (screen == Screen.HOME || screen == Screen.APPS) {
-            apps = withContext(Dispatchers.IO) { loadApps(context) }
-        }
+    var appsVersion by remember { mutableIntStateOf(0) }
+    LaunchedEffect(appsVersion) {
+        apps = withContext(Dispatchers.IO) { loadApps(context) }
     }
+    DisposableEffect(Unit) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context, intent: Intent) {
+                appsVersion++
+            }
+        }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addDataScheme("package")
+        }
+        ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+
+    val music by nowPlaying.nowPlaying.collectAsState()
+    val musicAccess by nowPlaying.hasAccess.collectAsState()
 
     fun openBrowser(url: String? = null) {
         when {
@@ -121,6 +147,9 @@ fun CarHomeApp(prefs: Prefs, speedMonitor: SpeedMonitor) {
                 speedKmh = speed,
                 gpsOk = gpsOk,
                 weather = weather,
+                music = music,
+                musicAccess = musicAccess,
+                nowPlaying = nowPlaying,
                 pinnedApps = apps.filter { it.packageName in prefs.pinnedApps },
                 onOpen = { target ->
                     if (target == Screen.BROWSER) openBrowser() else screen = target
